@@ -29,7 +29,7 @@ _school_configs: Dict[str, Dict[str, Any]] = {
     "demo-school": {
         "school_name": "Demo School",
         "admin_phones": ["+15551234567"],
-        "admin_emails": ["admin@demo-school.edu"],
+        "admin_emails": ["admin@demo-school.example.com"],
         "police_phone": "+15559876543",
         "police_email": "dispatch@local-pd.gov",
         "webhook_url": None,
