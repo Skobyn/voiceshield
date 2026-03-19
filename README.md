@@ -1,5 +1,7 @@
 # 🛡️ VoiceShield
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **School Voicemail Intelligence System** — Real-time transcription, threat detection, and attendance automation.
 
 ## The Problem
@@ -119,4 +121,4 @@ cd infra && terraform apply
 
 ## License
 
-Proprietary — Apex Internal Apps
+This project is licensed under the [MIT License](LICENSE). See the [LICENSE](LICENSE) file for details.
