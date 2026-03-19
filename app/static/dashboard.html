@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceShield — Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#172033', 950: '#0b1120' },
+                        brand: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .nav-item { transition: all 0.15s ease; }
+        .nav-item:hover { background: rgba(56, 189, 248, 0.08); }
+        .nav-item.active { background: rgba(56, 189, 248, 0.12); border-right: 3px solid #38bdf8; color: #38bdf8; }
+        .threat-pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .tab-hidden { display: none; }
+    </style>
+</head>
+<body class="h-full bg-slate-950 text-slate-200 dark">
+
+<!-- Layout -->
+<div class="flex h-full">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0">
+        <!-- Logo -->
+        <div class="p-5 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">🛡️</div>
+                <div>
+                    <h1 class="text-lg font-bold text-white leading-tight">VoiceShield</h1>
+                    <p class="text-xs text-slate-500">School Voicemail Intelligence</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- School Selector -->
+        <div class="p-4 border-b border-slate-800">
+            <label class="text-xs text-slate-500 uppercase tracking-wider font-medium">School</label>
+            <select id="school-selector" class="mt-1.5 w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <option value="">All Schools</option>
+            </select>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-3 px-2 space-y-0.5">
+            <a href="#" data-page="dashboard" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </a>
+            <a href="#" data-page="voicemails" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                Voicemail Log
+                <span id="nav-vm-count" class="ml-auto bg-slate-700 text-slate-300 text-xs px-2 py-0.5 rounded-full">0</span>
+            </a>
+            <a href="#" data-page="threats" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                Threats
+                <span id="nav-threat-count" class="ml-auto bg-red-900/60 text-red-300 text-xs px-2 py-0.5 rounded-full">0</span>
+            </a>
+            <a href="#" data-page="attendance" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                Attendance
+            </a>
+            <a href="#" data-page="stats" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Statistics
+            </a>
+            <a href="#" data-page="settings" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Settings
+            </a>
+        </nav>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-slate-800">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                <span class="text-xs text-slate-500">System Online</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">v0.1.0</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto scrollbar-thin">
+
+        <!-- ===== DASHBOARD PAGE ===== -->
+        <div id="page-dashboard" class="p-6 space-y-6">
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Dashboard</h2>
+                    <p class="text-sm text-slate-400 mt-1">Real-time voicemail intelligence overview</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="last-refresh" class="text-xs text-slate-500">Last updated: just now</span>
+                    <button onclick="refreshAll()" class="bg-brand-500 hover:bg-brand-600 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="card p-5">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-slate-400">Today's Voicemails</p>
+                        <div class="w-10 h-10 bg-brand-500/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                        </div>
+                    </div>
+                    <p id="kpi-today" class="text-3xl font-bold text-white mt-2">—</p>
+                    <p class="text-xs text-slate-500 mt-1"><span id="kpi-week" class="text-brand-400">—</span> this week · <span id="kpi-total" class="text-slate-400">—</span> all time</p>
+                </div>
+                <div class="card p-5">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-slate-400">Threat Detections</p>
+                        <div class="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                        </div>
+                    </div>
+                    <p id="kpi-threats" class="text-3xl font-bold text-white mt-2">—</p>
+                    <div id="kpi-threat-pills" class="flex gap-2 mt-1"></div>
+                </div>
+                <div class="card p-5">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-slate-400">Attendance Processed</p>
+                        <div class="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        </div>
+                    </div>
+                    <p id="kpi-attendance" class="text-3xl font-bold text-white mt-2">—</p>
+                    <div id="kpi-att-pills" class="flex gap-2 mt-1"></div>
+                </div>
+                <div class="card p-5">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-slate-400">Avg Processing Time</p>
+                        <div class="w-10 h-10 bg-violet-500/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                    </div>
+                    <p id="kpi-proc-time" class="text-3xl font-bold text-white mt-2">—</p>
+                    <p class="text-xs text-slate-500 mt-1">milliseconds per voicemail</p>
+                </div>
+            </div>
+
+            <!-- Charts row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="card p-5 lg:col-span-2">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4">Daily Volume (Last 7 Days)</h3>
+                    <div class="h-56"><canvas id="chart-daily"></canvas></div>
+                </div>
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4">Call Type Breakdown</h3>
+                    <div class="h-56"><canvas id="chart-categories"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Recent Threats Alert -->
+            <div class="card p-5 border-red-900/50" id="dash-threats-panel">
+                <h3 class="text-sm font-semibold text-red-400 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 threat-pulse" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+                    Active Threat Alerts
+                </h3>
+                <div id="dash-threats-list" class="space-y-3"></div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card p-5">
+                <h3 class="text-sm font-semibold text-slate-300 mb-3">Recent Activity</h3>
+                <div id="dash-recent" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- ===== VOICEMAIL LOG PAGE ===== -->
+        <div id="page-voicemails" class="p-6 space-y-6 tab-hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Voicemail Log</h2>
+                    <p class="text-sm text-slate-400 mt-1">Complete voicemail history with transcripts and classifications</p>
+                </div>
+                <div class="flex gap-2">
+                    <select id="vm-filter-category" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
+                        <option value="">All Categories</option>
+                        <option value="attendance">Attendance</option>
+                        <option value="threat">Threat</option>
+                        <option value="general_inquiry">General Inquiry</option>
+                        <option value="spam">Spam</option>
+                        <option value="wrong_number">Wrong Number</option>
+                    </select>
+                    <select id="vm-filter-threat" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300">
+                        <option value="">All Threat Levels</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                        <option value="none">None</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+                            <th class="px-4 py-3 text-left">Time</th>
+                            <th class="px-4 py-3 text-left">Caller</th>
+                            <th class="px-4 py-3 text-left">School</th>
+                            <th class="px-4 py-3 text-left">Transcript</th>
+                            <th class="px-4 py-3 text-left">Category</th>
+                            <th class="px-4 py-3 text-left">Threat</th>
+                            <th class="px-4 py-3 text-left">Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vm-table-body" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== THREATS PAGE ===== -->
+        <div id="page-threats" class="p-6 space-y-6 tab-hidden">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Threat Alerts</h2>
+                <p class="text-sm text-slate-400 mt-1">All flagged voicemails requiring attention</p>
+            </div>
+            <div id="threats-list" class="space-y-4"></div>
+            <div id="threats-empty" class="card p-12 text-center text-slate-500 tab-hidden">
+                <svg class="w-12 h-12 mx-auto mb-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="font-medium">No active threats</p>
+                <p class="text-sm mt-1">All voicemails have been classified as safe</p>
+            </div>
+        </div>
+
+        <!-- ===== ATTENDANCE PAGE ===== -->
+        <div id="page-attendance" class="p-6 space-y-6 tab-hidden">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Attendance Board</h2>
+                <p class="text-sm text-slate-400 mt-1">Parsed attendance records from voicemails</p>
+            </div>
+            <!-- Attendance summary cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="card p-4 flex items-center gap-4">
+                    <div class="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center text-2xl">🏠</div>
+                    <div>
+                        <p class="text-2xl font-bold text-white" id="att-absent-count">0</p>
+                        <p class="text-xs text-slate-400">Absent</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <div class="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-2xl">⏰</div>
+                    <div>
+                        <p class="text-2xl font-bold text-white" id="att-late-count">0</p>
+                        <p class="text-xs text-slate-400">Late / Tardy</p>
+                    </div>
+                </div>
+                <div class="card p-4 flex items-center gap-4">
+                    <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-2xl">🚗</div>
+                    <div>
+                        <p class="text-2xl font-bold text-white" id="att-pickup-count">0</p>
+                        <p class="text-xs text-slate-400">Early Pickup</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+                            <th class="px-4 py-3 text-left">Student</th>
+                            <th class="px-4 py-3 text-left">Type</th>
+                            <th class="px-4 py-3 text-left">Reason</th>
+                            <th class="px-4 py-3 text-left">Date</th>
+                            <th class="px-4 py-3 text-left">Guardian</th>
+                            <th class="px-4 py-3 text-left">School</th>
+                        </tr>
+                    </thead>
+                    <tbody id="att-table-body" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== STATISTICS PAGE ===== -->
+        <div id="page-stats" class="p-6 space-y-6 tab-hidden">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Statistics</h2>
+                <p class="text-sm text-slate-400 mt-1">Detailed analytics and breakdowns</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4">Daily Voicemail Volume</h3>
+                    <div class="h-64"><canvas id="chart-stats-daily"></canvas></div>
+                </div>
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4">Call Type Distribution</h3>
+                    <div class="h-64"><canvas id="chart-stats-pie"></canvas></div>
+                </div>
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4">Threat Severity Breakdown</h3>
+                    <div class="h-64"><canvas id="chart-stats-threats"></canvas></div>
+                </div>
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4">Attendance Type Distribution</h3>
+                    <div class="h-64"><canvas id="chart-stats-attendance"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SETTINGS PAGE ===== -->
+        <div id="page-settings" class="p-6 space-y-6 tab-hidden">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Settings</h2>
+                <p class="text-sm text-slate-400 mt-1">Per-school configuration, alert thresholds, and integrations</p>
+            </div>
+            <div id="settings-no-school" class="card p-12 text-center text-slate-500">
+                <svg class="w-12 h-12 mx-auto mb-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <p class="font-medium">Select a school above to manage settings</p>
+            </div>
+            <div id="settings-form" class="space-y-6 tab-hidden">
+                <!-- School Info -->
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        School Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">School Name</label>
+                            <input id="cfg-name" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Attendance Line Number</label>
+                            <input id="cfg-att-line" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="+15551001099">
+                        </div>
+                    </div>
+                </div>
+                <!-- Admin Contacts -->
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Admin Contacts
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Admin Emails (one per line)</label>
+                            <textarea id="cfg-emails" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Admin Phone Numbers (one per line)</label>
+                            <textarea id="cfg-phones" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <!-- Notification Targets -->
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        Threat Notification Targets
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Police Department Phone</label>
+                            <input id="cfg-police-phone" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Police Department Email</label>
+                            <input id="cfg-police-email" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                    </div>
+                </div>
+                <!-- Alert Thresholds -->
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                        Alert Thresholds
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Sensitivity Level</label>
+                            <select id="cfg-sensitivity" class="w-full md:w-64 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="low">Low — Only critical/high threats trigger alerts</option>
+                                <option value="medium">Medium — Medium and above trigger alerts</option>
+                                <option value="high">High — Low and above trigger alerts (most sensitive)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Alert Keywords (comma-separated)</label>
+                            <textarea id="cfg-keywords" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="gun, bomb, shoot, kill, weapon, knife, attack"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <!-- Integration Settings -->
+                <div class="card p-5">
+                    <h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        Integrations
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Notification Webhook URL (Slack, etc.)</label>
+                            <input id="cfg-webhook" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="https://hooks.slack.com/services/...">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Attendance Output Webhook URL</label>
+                            <input id="cfg-att-webhook" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="https://sis.school.edu/api/attendance">
+                        </div>
+                    </div>
+                </div>
+                <!-- Save -->
+                <div class="flex justify-end">
+                    <button onclick="saveSettings()" class="bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+// ──────────────────────────────────────────────
+// State
+// ──────────────────────────────────────────────
+const API = '/api/dashboard';
+let currentSchool = '';
+let charts = {};
+
+// ──────────────────────────────────────────────
+// Navigation
+// ──────────────────────────────────────────────
+document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', e => {
+        e.preventDefault();
+        const page = el.dataset.page;
+        if (!page) return;
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('tab-hidden'));
+        document.getElementById('page-' + page).classList.remove('tab-hidden');
+    });
+});
+
+// ──────────────────────────────────────────────
+// School selector
+// ──────────────────────────────────────────────
+const schoolSelect = document.getElementById('school-selector');
+schoolSelect.addEventListener('change', () => {
+    currentSchool = schoolSelect.value;
+    refreshAll();
+    loadSettings();
+});
+
+// ──────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────
+function qs(id) { return document.getElementById(id); }
+function threatColor(level) {
+    return { critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e', none: '#64748b' }[level] || '#64748b';
+}
+function threatBg(level) {
+    return { critical: 'bg-red-500/20 text-red-300 border-red-500/30', high: 'bg-orange-500/20 text-orange-300 border-orange-500/30', medium: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30', low: 'bg-green-500/20 text-green-300 border-green-500/30', none: 'bg-slate-500/20 text-slate-400 border-slate-500/30' }[level] || 'bg-slate-500/20 text-slate-400';
+}
+function catLabel(cat) {
+    return { attendance: '📋 Attendance', threat: '🚨 Threat', general_inquiry: '💬 Inquiry', spam: '🗑️ Spam', wrong_number: '📵 Wrong #', other: '📎 Other' }[cat] || cat;
+}
+function typeLabel(t) {
+    return { absent: '🏠 Absent', late: '⏰ Late', early_pickup: '🚗 Early Pickup' }[t] || t;
+}
+function relTime(iso) {
+    const d = new Date(iso);
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return Math.floor(diff / 86400) + 'd ago';
+}
+function fmtDate(iso) {
+    return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+async function api(path) {
+    const url = currentSchool ? `${API}${path}${path.includes('?') ? '&' : '?'}school_id=${currentSchool}` : `${API}${path}`;
+    const res = await fetch(url);
+    return res.json();
+}
+
+// ──────────────────────────────────────────────
+// Data loaders
+// ──────────────────────────────────────────────
+async function loadSchools() {
+    const data = await api('/schools');
+    schoolSelect.innerHTML = '<option value="">All Schools</option>';
+    data.schools.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        schoolSelect.appendChild(opt);
+    });
+}
+
+async function loadDashboard() {
+    const [stats, threats] = await Promise.all([api('/stats'), api('/threats')]);
+
+    qs('kpi-today').textContent = stats.total_today;
+    qs('kpi-week').textContent = stats.total_this_week;
+    qs('kpi-total').textContent = stats.total_all_time;
+    qs('kpi-threats').textContent = stats.threat_detections;
+    qs('kpi-attendance').textContent = stats.attendance_processed;
+    qs('kpi-proc-time').textContent = stats.avg_processing_time_ms.toLocaleString();
+
+    // Threat pills
+    const tp = qs('kpi-threat-pills');
+    tp.innerHTML = '';
+    for (const [level, count] of Object.entries(stats.threat_breakdown)) {
+        if (count > 0) {
+            tp.innerHTML += `<span class="text-xs px-2 py-0.5 rounded-full border ${threatBg(level)}">${count} ${level}</span>`;
+        }
+    }
+
+    // Attendance pills
+    const ap = qs('kpi-att-pills');
+    ap.innerHTML = '';
+    for (const [type, count] of Object.entries(stats.attendance_breakdown)) {
+        const label = { absent: 'absent', late: 'late', early_pickup: 'pickup' }[type] || type;
+        if (count > 0) {
+            ap.innerHTML += `<span class="text-xs px-2 py-0.5 rounded-full border bg-slate-700/50 text-slate-300 border-slate-600">${count} ${label}</span>`;
+        }
+    }
+
+    // Nav badges
+    qs('nav-vm-count').textContent = stats.total_all_time;
+    qs('nav-threat-count').textContent = stats.threat_detections;
+
+    // Daily volume chart
+    renderBarChart('chart-daily', stats.daily_volume);
+
+    // Category pie chart
+    renderPieChart('chart-categories', stats.category_breakdown);
+
+    // Threat alert panel
+    const threatList = qs('dash-threats-list');
+    if (threats.threats.length === 0) {
+        threatList.innerHTML = '<p class="text-sm text-slate-500">No active threats — all clear ✅</p>';
+    } else {
+        threatList.innerHTML = threats.threats.slice(0, 5).map(t => `
+            <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                <span class="mt-0.5 px-2 py-0.5 rounded text-xs font-bold border ${threatBg(t.threat_level)}">${t.threat_level.toUpperCase()}</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm text-slate-200 truncate">${t.transcript}</p>
+                    <p class="text-xs text-slate-500 mt-1">${fmtDate(t.timestamp)} · ${t.caller} · ${t.school_id}</p>
+                </div>
+                ${t.alert_sent ? '<span class="text-xs text-emerald-400">✓ Alerted</span>' : '<span class="text-xs text-amber-400">⏳ Review</span>'}
+            </div>
+        `).join('');
+    }
+
+    // Recent activity
+    const vms = await api('/voicemails');
+    qs('dash-recent').innerHTML = vms.voicemails.slice(0, 8).map(v => `
+        <div class="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-slate-800/30 transition-colors">
+            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${threatColor(v.threat_level)}"></span>
+            <span class="text-xs text-slate-500 w-16 flex-shrink-0">${relTime(v.timestamp)}</span>
+            <span class="text-sm text-slate-300 truncate flex-1">${v.transcript?.substring(0, 100) || 'N/A'}...</span>
+            <span class="text-xs px-2 py-0.5 rounded-full border ${threatBg(v.threat_level)}">${v.threat_level}</span>
+        </div>
+    `).join('');
+
+    qs('last-refresh').textContent = 'Last updated: just now';
+}
+
+async function loadVoicemails() {
+    const cat = qs('vm-filter-category').value;
+    const tl = qs('vm-filter-threat').value;
+    let path = '/voicemails?limit=100';
+    if (cat) path += `&category=${cat}`;
+    if (tl) path += `&threat_level=${tl}`;
+    const data = await api(path);
+
+    qs('vm-table-body').innerHTML = data.voicemails.map(v => `
+        <tr class="hover:bg-slate-800/30 transition-colors">
+            <td class="px-4 py-3 text-xs text-slate-400 whitespace-nowrap">${fmtDate(v.timestamp)}</td>
+            <td class="px-4 py-3 text-sm font-mono text-slate-300">${v.caller}</td>
+            <td class="px-4 py-3 text-xs text-slate-500">${v.school_id}</td>
+            <td class="px-4 py-3 text-sm text-slate-300 max-w-md truncate">${v.transcript?.substring(0, 120) || '—'}</td>
+            <td class="px-4 py-3"><span class="text-xs">${catLabel(v.category)}</span></td>
+            <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded-full border ${threatBg(v.threat_level)}">${v.threat_level}</span></td>
+            <td class="px-4 py-3 text-xs text-slate-400">${v.confidence ? (v.confidence * 100).toFixed(0) + '%' : '—'}</td>
+        </tr>
+    `).join('');
+}
+
+async function loadThreats() {
+    const data = await api('/threats');
+    if (data.threats.length === 0) {
+        qs('threats-list').classList.add('tab-hidden');
+        qs('threats-empty').classList.remove('tab-hidden');
+        return;
+    }
+    qs('threats-list').classList.remove('tab-hidden');
+    qs('threats-empty').classList.add('tab-hidden');
+
+    qs('threats-list').innerHTML = data.threats.map(t => `
+        <div class="card p-5 border-l-4" style="border-left-color: ${threatColor(t.threat_level)}">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="px-3 py-1 rounded-lg text-sm font-bold border ${threatBg(t.threat_level)}">${t.threat_level.toUpperCase()}</span>
+                    <span class="text-sm text-slate-400">${fmtDate(t.timestamp)}</span>
+                    <span class="text-xs text-slate-500">· ${t.school_id}</span>
+                </div>
+                <div class="flex gap-2">
+                    ${t.alert_sent ? '<span class="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-1 rounded-lg">✓ Alerts Sent</span>' : '<span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded-lg">Needs Review</span>'}
+                </div>
+            </div>
+            <p class="mt-3 text-slate-200">${t.transcript}</p>
+            <div class="mt-3 flex items-center gap-4 text-xs text-slate-500">
+                <span>📞 ${t.caller}</span>
+                <span>🎯 Confidence: ${t.confidence ? (t.confidence * 100).toFixed(0) + '%' : '—'}</span>
+                ${t.threat_keywords?.length ? '<span>🔑 Keywords: ' + t.threat_keywords.join(', ') + '</span>' : ''}
+                ${t.alert_targets?.length ? '<span>📨 Notified: ' + t.alert_targets.join(', ') + '</span>' : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadAttendance() {
+    const data = await api('/attendance');
+    const records = data.records;
+
+    let absent = 0, late = 0, pickup = 0;
+    records.forEach(r => {
+        if (r.type === 'absent') absent++;
+        else if (r.type === 'late') late++;
+        else if (r.type === 'early_pickup') pickup++;
+    });
+    qs('att-absent-count').textContent = absent;
+    qs('att-late-count').textContent = late;
+    qs('att-pickup-count').textContent = pickup;
+
+    qs('att-table-body').innerHTML = records.map(r => `
+        <tr class="hover:bg-slate-800/30 transition-colors">
+            <td class="px-4 py-3 text-sm font-medium text-white">${r.student_name}</td>
+            <td class="px-4 py-3"><span class="text-xs">${typeLabel(r.type)}</span></td>
+            <td class="px-4 py-3 text-sm text-slate-300">${r.reason}</td>
+            <td class="px-4 py-3 text-sm text-slate-400">${r.date}</td>
+            <td class="px-4 py-3 text-sm text-slate-400">${r.guardian}</td>
+            <td class="px-4 py-3 text-xs text-slate-500">${r.school_id}</td>
+        </tr>
+    `).join('');
+}
+
+async function loadStats() {
+    const stats = await api('/stats');
+
+    // Stats page charts
+    renderBarChart('chart-stats-daily', stats.daily_volume, true);
+
+    renderPieChart('chart-stats-pie', stats.category_breakdown, true);
+
+    // Threat horizontal bar
+    renderHBarChart('chart-stats-threats', stats.threat_breakdown, {
+        critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e'
+    });
+
+    // Attendance doughnut
+    renderDoughnut('chart-stats-attendance', stats.attendance_breakdown, {
+        absent: '#ef4444', late: '#f59e0b', early_pickup: '#3b82f6'
+    });
+}
+
+// ──────────────────────────────────────────────
+// Settings
+// ──────────────────────────────────────────────
+async function loadSettings() {
+    if (!currentSchool) {
+        qs('settings-no-school').classList.remove('tab-hidden');
+        qs('settings-form').classList.add('tab-hidden');
+        return;
+    }
+    qs('settings-no-school').classList.add('tab-hidden');
+    qs('settings-form').classList.remove('tab-hidden');
+
+    const data = await fetch(`${API}/school/${currentSchool}/config`).then(r => r.json());
+    qs('cfg-name').value = data.school_name || '';
+    qs('cfg-att-line').value = data.attendance_line || '';
+    qs('cfg-emails').value = (data.admin_emails || []).join('\n');
+    qs('cfg-phones').value = (data.admin_phones || []).join('\n');
+    qs('cfg-police-phone').value = data.police_phone || '';
+    qs('cfg-police-email').value = data.police_email || '';
+    qs('cfg-sensitivity').value = data.sensitivity || 'medium';
+    qs('cfg-keywords').value = (data.alert_keywords || []).join(', ');
+    qs('cfg-webhook').value = data.webhook_url || '';
+    qs('cfg-att-webhook').value = data.attendance_webhook_url || '';
+}
+
+async function saveSettings() {
+    if (!currentSchool) return;
+    const body = {
+        school_name: qs('cfg-name').value,
+        attendance_line: qs('cfg-att-line').value,
+        admin_emails: qs('cfg-emails').value.split('\n').map(s => s.trim()).filter(Boolean),
+        admin_phones: qs('cfg-phones').value.split('\n').map(s => s.trim()).filter(Boolean),
+        police_phone: qs('cfg-police-phone').value,
+        police_email: qs('cfg-police-email').value,
+        sensitivity: qs('cfg-sensitivity').value,
+        alert_keywords: qs('cfg-keywords').value.split(',').map(s => s.trim()).filter(Boolean),
+        webhook_url: qs('cfg-webhook').value || null,
+        attendance_webhook_url: qs('cfg-att-webhook').value || null,
+    };
+    await fetch(`${API}/school/${currentSchool}/config`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+    // Flash success
+    const btn = event.target.closest('button');
+    btn.textContent = '✓ Saved!';
+    btn.classList.replace('bg-brand-500', 'bg-emerald-600');
+    setTimeout(() => {
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Settings';
+        btn.classList.replace('bg-emerald-600', 'bg-brand-500');
+    }, 1500);
+}
+
+// ──────────────────────────────────────────────
+// Charts
+// ──────────────────────────────────────────────
+const chartDefaults = {
+    color: '#94a3b8',
+    borderColor: '#334155',
+    font: { family: 'Inter' },
+};
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderBarChart(id, dailyData, large) {
+    destroyChart(id);
+    const labels = Object.keys(dailyData).sort();
+    const values = labels.map(k => dailyData[k]);
+    const displayLabels = labels.map(d => {
+        const dt = new Date(d + 'T00:00:00');
+        return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    });
+    charts[id] = new Chart(document.getElementById(id), {
+        type: 'bar',
+        data: {
+            labels: displayLabels,
+            datasets: [{
+                label: 'Voicemails',
+                data: values,
+                backgroundColor: 'rgba(14, 165, 233, 0.6)',
+                borderColor: 'rgba(14, 165, 233, 1)',
+                borderWidth: 1,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { display: false } },
+                y: { beginAtZero: true, ticks: { color: '#64748b', stepSize: 1 }, grid: { color: '#1e293b' } }
+            }
+        }
+    });
+}
+
+function renderPieChart(id, catData, large) {
+    destroyChart(id);
+    const labels = Object.keys(catData);
+    const values = labels.map(k => catData[k]);
+    const colors = labels.map(l => ({
+        attendance: '#22c55e', threat: '#ef4444', general_inquiry: '#3b82f6', spam: '#64748b', wrong_number: '#a855f7', other: '#f59e0b'
+    }[l] || '#64748b'));
+    charts[id] = new Chart(document.getElementById(id), {
+        type: 'doughnut',
+        data: {
+            labels: labels.map(l => l.replace('_', ' ')),
+            datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12, font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8 } }
+            }
+        }
+    });
+}
+
+function renderHBarChart(id, data, colorMap) {
+    destroyChart(id);
+    const labels = Object.keys(data);
+    const values = labels.map(k => data[k]);
+    const colors = labels.map(k => colorMap[k] || '#64748b');
+    charts[id] = new Chart(document.getElementById(id), {
+        type: 'bar',
+        data: {
+            labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+            datasets: [{ data: values, backgroundColor: colors.map(c => c + 'aa'), borderColor: colors, borderWidth: 1, borderRadius: 6 }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, ticks: { color: '#64748b', stepSize: 1 }, grid: { color: '#1e293b' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderDoughnut(id, data, colorMap) {
+    destroyChart(id);
+    const labels = Object.keys(data);
+    const values = labels.map(k => data[k]);
+    const colors = labels.map(k => colorMap[k] || '#64748b');
+    charts[id] = new Chart(document.getElementById(id), {
+        type: 'doughnut',
+        data: {
+            labels: labels.map(l => l.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())),
+            datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '55%',
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12, font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8 } }
+            }
+        }
+    });
+}
+
+// ──────────────────────────────────────────────
+// Filter listeners
+// ──────────────────────────────────────────────
+qs('vm-filter-category').addEventListener('change', loadVoicemails);
+qs('vm-filter-threat').addEventListener('change', loadVoicemails);
+
+// ──────────────────────────────────────────────
+// Refresh all
+// ──────────────────────────────────────────────
+async function refreshAll() {
+    await Promise.all([
+        loadDashboard(),
+        loadVoicemails(),
+        loadThreats(),
+        loadAttendance(),
+        loadStats(),
+    ]);
+}
+
+// ──────────────────────────────────────────────
+// Init
+// ──────────────────────────────────────────────
+(async () => {
+    await loadSchools();
+    await refreshAll();
+    loadSettings();
+    // Auto-refresh every 30s
+    setInterval(refreshAll, 30000);
+})();
+</script>
+</body>
+</html>
