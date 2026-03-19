@@ -43,22 +43,22 @@ def seed_mock_data():
 
     # Add some school configs
     _school_configs.update({
-        "lincoln-elementary": {
-            "school_name": "Lincoln Elementary",
+        "springfield-elementary": {
+            "school_name": "Springfield Elementary",
             "admin_phones": ["+15551001001"],
-            "admin_emails": ["admin@lincoln-elementary.edu", "principal@lincoln-elementary.edu"],
+            "admin_emails": ["admin@springfield-elementary.edu", "principal@springfield-elementary.edu"],
             "police_phone": "+15559110001",
             "police_email": "dispatch@springfield-pd.gov",
             "webhook_url": "https://hooks.slack.com/services/XXXXX",
-            "attendance_webhook_url": "https://sis.lincoln-elementary.edu/api/attendance",
+            "attendance_webhook_url": "https://sis.springfield-elementary.edu/api/attendance",
             "attendance_line": "+15551001099",
             "alert_keywords": ["gun", "bomb", "shoot", "kill", "weapon", "knife", "attack", "hurt", "fire"],
             "sensitivity": "high",
         },
-        "washington-middle": {
-            "school_name": "Washington Middle School",
+        "westside-middle": {
+            "school_name": "Westside Middle School",
             "admin_phones": ["+15552002001", "+15552002002"],
-            "admin_emails": ["office@washington-middle.edu"],
+            "admin_emails": ["office@westside-middle.edu"],
             "police_phone": "+15559110002",
             "police_email": "dispatch@springfield-pd.gov",
             "webhook_url": None,
@@ -67,14 +67,14 @@ def seed_mock_data():
             "alert_keywords": ["gun", "bomb", "shoot", "kill", "weapon"],
             "sensitivity": "medium",
         },
-        "jefferson-high": {
-            "school_name": "Jefferson High School",
+        "riverside-high": {
+            "school_name": "Riverside High School",
             "admin_phones": ["+15553003001"],
-            "admin_emails": ["security@jefferson-high.edu", "principal@jefferson-high.edu"],
+            "admin_emails": ["security@riverside-high.edu", "principal@riverside-high.edu"],
             "police_phone": "+15559110003",
             "police_email": "dispatch@springfield-pd.gov",
             "webhook_url": "https://hooks.slack.com/services/YYYYY",
-            "attendance_webhook_url": "https://powerschool.jefferson-high.edu/webhook",
+            "attendance_webhook_url": "https://powerschool.riverside-high.edu/webhook",
             "attendance_line": "+15553003099",
             "alert_keywords": ["gun", "bomb", "shoot", "kill", "weapon", "knife", "attack", "hurt", "fire", "threat"],
             "sensitivity": "high",
@@ -84,110 +84,110 @@ def seed_mock_data():
     # Voicemail records spanning the last 7 days
     mock_voicemails = [
         # Today — early morning bomb threat (4:30 AM)
-        {"recording_sid": "REC-000", "caller": "BLOCKED", "called_number": "+15551001001", "school_id": "lincoln-elementary",
-         "transcript": "I placed a bomb inside Lincoln Elementary. It's in the building right now and it's set to go off when the children arrive. You have until eight o'clock. Don't bother tracing this call.",
+        {"recording_sid": "REC-000", "caller": "BLOCKED", "called_number": "+15551001001", "school_id": "springfield-elementary",
+         "transcript": "I placed a bomb inside Springfield Elementary. It's in the building right now and it's set to go off when the children arrive. You have until eight o'clock. Don't bother tracing this call.",
          "threat_level": "critical", "threat_keywords": ["bomb", "go off", "placed a bomb", "set to go off"], "category": "threat", "is_attendance": False,
          "confidence": 0.99, "timestamp": now.replace(hour=4, minute=31, second=14, microsecond=0).isoformat(), "processing_time_ms": 1180,
-         "alert_sent": True, "alert_targets": ["admin@lincoln-elementary.edu", "principal@lincoln-elementary.edu", "dispatch@springfield-pd.gov", "+15559110001"]},
+         "alert_sent": True, "alert_targets": ["admin@springfield-elementary.edu", "principal@springfield-elementary.edu", "dispatch@springfield-pd.gov", "+15559110001"]},
 
         # Today — attendance calls
-        {"recording_sid": "REC-001", "caller": "+15551234567", "called_number": "+15551001099", "school_id": "lincoln-elementary",
+        {"recording_sid": "REC-001", "caller": "+15551234567", "called_number": "+15551001099", "school_id": "springfield-elementary",
          "transcript": "Hi, this is Maria Garcia calling about my son Diego. He has a fever and won't be coming to school today. He's in Mrs. Patterson's third grade class. Thank you.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.97, "timestamp": (now - timedelta(hours=1)).isoformat(), "processing_time_ms": 2340,
          "attendance_record": {"student_name": "Diego Garcia", "reason": "sick - fever", "date": now.strftime("%Y-%m-%d"), "type": "absent", "guardian": "Maria Garcia"}},
 
-        {"recording_sid": "REC-002", "caller": "+15559876543", "called_number": "+15551001099", "school_id": "lincoln-elementary",
+        {"recording_sid": "REC-002", "caller": "+15559876543", "called_number": "+15551001099", "school_id": "springfield-elementary",
          "transcript": "Good morning, this is James Wilson. My daughter Emma will be late today, she has a dentist appointment at 9 and should be there by 10:30. She's in fifth grade, room 12.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.96, "timestamp": (now - timedelta(hours=2)).isoformat(), "processing_time_ms": 1890,
          "attendance_record": {"student_name": "Emma Wilson", "reason": "dentist appointment", "date": now.strftime("%Y-%m-%d"), "type": "late", "guardian": "James Wilson"}},
 
-        {"recording_sid": "REC-003", "caller": "+15557778888", "called_number": "+15552002099", "school_id": "washington-middle",
+        {"recording_sid": "REC-003", "caller": "+15557778888", "called_number": "+15552002099", "school_id": "westside-middle",
          "transcript": "Hello, I need to pick up my son Tyler Brooks early today at 2pm. He has an orthodontist appointment. He's in 7th grade. My name is Sarah Brooks, I'm listed as his emergency contact.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.95, "timestamp": (now - timedelta(hours=3)).isoformat(), "processing_time_ms": 2100,
          "attendance_record": {"student_name": "Tyler Brooks", "reason": "orthodontist appointment", "date": now.strftime("%Y-%m-%d"), "type": "early_pickup", "guardian": "Sarah Brooks"}},
 
-        {"recording_sid": "REC-004", "caller": "+15553216789", "called_number": "+15553003099", "school_id": "jefferson-high",
+        {"recording_sid": "REC-004", "caller": "+15553216789", "called_number": "+15553003099", "school_id": "riverside-high",
          "transcript": "Hi, this is Karen Phillips. My daughter Ava has a migraine this morning and won't be in today. She's a freshman. Please let her teachers know. Thanks.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.97, "timestamp": (now - timedelta(hours=4)).isoformat(), "processing_time_ms": 1560,
          "attendance_record": {"student_name": "Ava Phillips", "reason": "migraine", "date": now.strftime("%Y-%m-%d"), "type": "absent", "guardian": "Karen Phillips"}},
 
-        {"recording_sid": "REC-005", "caller": "+15554443333", "called_number": "+15551001001", "school_id": "lincoln-elementary",
+        {"recording_sid": "REC-005", "caller": "+15554443333", "called_number": "+15551001001", "school_id": "springfield-elementary",
          "transcript": "Hi, I'm calling to ask about the spring concert schedule. When is the 4th grade performance? Also, do parents need tickets or is it open seating? Thank you!",
          "threat_level": "none", "threat_keywords": [], "category": "general_inquiry", "is_attendance": False,
          "confidence": 0.98, "timestamp": (now - timedelta(hours=5)).isoformat(), "processing_time_ms": 1750},
 
         # Yesterday
-        {"recording_sid": "REC-006", "caller": "+15552223333", "called_number": "+15551001099", "school_id": "lincoln-elementary",
+        {"recording_sid": "REC-006", "caller": "+15552223333", "called_number": "+15551001099", "school_id": "springfield-elementary",
          "transcript": "This is Tom Chen, calling about my daughter Lily Chen. She was throwing up this morning and won't be at school today or probably tomorrow. She's in second grade with Mr. Adams.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.97, "timestamp": (now - timedelta(days=1, hours=2)).isoformat(), "processing_time_ms": 2200,
          "attendance_record": {"student_name": "Lily Chen", "reason": "sick - vomiting", "date": (now - timedelta(days=1)).strftime("%Y-%m-%d"), "type": "absent", "guardian": "Tom Chen"}},
 
-        {"recording_sid": "REC-007", "caller": "+15558887777", "called_number": "+15553003099", "school_id": "jefferson-high",
+        {"recording_sid": "REC-007", "caller": "+15558887777", "called_number": "+15553003099", "school_id": "riverside-high",
          "transcript": "Hey, this is Mike Johnson. My son Ryan won't be in school today, he's got a cold. He's a sophomore. Thanks.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.96, "timestamp": (now - timedelta(days=1, hours=3)).isoformat(), "processing_time_ms": 1680,
          "attendance_record": {"student_name": "Ryan Johnson", "reason": "cold", "date": (now - timedelta(days=1)).strftime("%Y-%m-%d"), "type": "absent", "guardian": "Mike Johnson"}},
 
-        {"recording_sid": "REC-008", "caller": "+15556665555", "called_number": "+15552002001", "school_id": "washington-middle",
+        {"recording_sid": "REC-008", "caller": "+15556665555", "called_number": "+15552002001", "school_id": "westside-middle",
          "transcript": "Hi, this is Linda Park. Just calling to let you know my son Jason will be out today and tomorrow. We're visiting family out of town for a funeral. He's in 6th grade, Mrs. Cooper's class.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.96, "timestamp": (now - timedelta(days=1, hours=5)).isoformat(), "processing_time_ms": 2050,
          "attendance_record": {"student_name": "Jason Park", "reason": "family funeral - out of town", "date": (now - timedelta(days=1)).strftime("%Y-%m-%d"), "type": "absent", "guardian": "Linda Park"}},
 
         # 2 days ago
-        {"recording_sid": "REC-009", "caller": "+15551112222", "called_number": "+15551001099", "school_id": "lincoln-elementary",
+        {"recording_sid": "REC-009", "caller": "+15551112222", "called_number": "+15551001099", "school_id": "springfield-elementary",
          "transcript": "Good morning, this is Rachel Kim. My twins Sophia and Ethan Kim will not be in school today. We have a family emergency and need to travel out of state. They should be back by Thursday. They're in first grade.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.95, "timestamp": (now - timedelta(days=2, hours=1)).isoformat(), "processing_time_ms": 2100,
          "attendance_record": {"student_name": "Sophia Kim, Ethan Kim", "reason": "family emergency", "date": (now - timedelta(days=2)).strftime("%Y-%m-%d"), "type": "absent", "guardian": "Rachel Kim"}},
 
-        {"recording_sid": "REC-010", "caller": "+15559990000", "called_number": "+15553003001", "school_id": "jefferson-high",
+        {"recording_sid": "REC-010", "caller": "+15559990000", "called_number": "+15553003001", "school_id": "riverside-high",
          "transcript": "Yeah hi this is about your extended car warranty. We've been trying to reach you about...",
          "threat_level": "none", "threat_keywords": [], "category": "spam", "is_attendance": False,
          "confidence": 0.99, "timestamp": (now - timedelta(days=2, hours=4)).isoformat(), "processing_time_ms": 980},
 
         # 3 days ago
-        {"recording_sid": "REC-011", "caller": "+15554567890", "called_number": "+15553003099", "school_id": "jefferson-high",
+        {"recording_sid": "REC-011", "caller": "+15554567890", "called_number": "+15553003099", "school_id": "riverside-high",
          "transcript": "Good morning, this is Brenda Nguyen. My daughter Chloe has a follow-up appointment with her allergist and will be arriving late, around 10 AM. She's a junior. Thank you.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.96, "timestamp": (now - timedelta(days=3, hours=2)).isoformat(), "processing_time_ms": 1750,
          "attendance_record": {"student_name": "Chloe Nguyen", "reason": "allergist appointment", "date": (now - timedelta(days=3)).strftime("%Y-%m-%d"), "type": "late", "guardian": "Brenda Nguyen"}},
 
-        {"recording_sid": "REC-012", "caller": "+15553334444", "called_number": "+15552002099", "school_id": "washington-middle",
+        {"recording_sid": "REC-012", "caller": "+15553334444", "called_number": "+15552002099", "school_id": "westside-middle",
          "transcript": "Hi, I'm Andrea Lopez. My daughter Mia Lopez in 8th grade will be absent today. She has a stomach bug. Thank you.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.97, "timestamp": (now - timedelta(days=3, hours=3)).isoformat(), "processing_time_ms": 1950,
          "attendance_record": {"student_name": "Mia Lopez", "reason": "stomach bug", "date": (now - timedelta(days=3)).strftime("%Y-%m-%d"), "type": "absent", "guardian": "Andrea Lopez"}},
 
         # 4-6 days ago
-        {"recording_sid": "REC-013", "caller": "+15557776666", "called_number": "+15551001099", "school_id": "lincoln-elementary",
+        {"recording_sid": "REC-013", "caller": "+15557776666", "called_number": "+15551001099", "school_id": "springfield-elementary",
          "transcript": "This is Pat O'Brien. Calling to let you know Connor will be late today, our car broke down. He should be there by 9:30. He's in 4th grade.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.96, "timestamp": (now - timedelta(days=4, hours=1)).isoformat(), "processing_time_ms": 1800,
          "attendance_record": {"student_name": "Connor O'Brien", "reason": "car broke down", "date": (now - timedelta(days=4)).strftime("%Y-%m-%d"), "type": "late", "guardian": "Pat O'Brien"}},
 
-        {"recording_sid": "REC-014", "caller": "+15554445555", "called_number": "+15552002001", "school_id": "washington-middle",
+        {"recording_sid": "REC-014", "caller": "+15554445555", "called_number": "+15552002001", "school_id": "westside-middle",
          "transcript": "Hello, I wanted to inquire about the registration process for next year. My family is moving to the district and I'd like to enroll my child. Can someone call me back?",
          "threat_level": "none", "threat_keywords": [], "category": "general_inquiry", "is_attendance": False,
          "confidence": 0.98, "timestamp": (now - timedelta(days=5, hours=3)).isoformat(), "processing_time_ms": 1650},
 
-        {"recording_sid": "REC-015", "caller": "+15558889999", "called_number": "+15553003099", "school_id": "jefferson-high",
+        {"recording_sid": "REC-015", "caller": "+15558889999", "called_number": "+15553003099", "school_id": "riverside-high",
          "transcript": "Hey this is Dave Martinez, my son Alex is sick, won't be in today. He's a junior.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.95, "timestamp": (now - timedelta(days=5, hours=2)).isoformat(), "processing_time_ms": 1550,
          "attendance_record": {"student_name": "Alex Martinez", "reason": "sick", "date": (now - timedelta(days=5)).strftime("%Y-%m-%d"), "type": "absent", "guardian": "Dave Martinez"}},
 
-        {"recording_sid": "REC-016", "caller": "+15551239876", "called_number": "+15551001001", "school_id": "lincoln-elementary",
+        {"recording_sid": "REC-016", "caller": "+15551239876", "called_number": "+15551001001", "school_id": "springfield-elementary",
          "transcript": "Um, hello? I think I have the wrong number. I was trying to reach Dr. Mitchell's office? Sorry about that.",
          "threat_level": "none", "threat_keywords": [], "category": "wrong_number", "is_attendance": False,
          "confidence": 0.99, "timestamp": (now - timedelta(days=6, hours=4)).isoformat(), "processing_time_ms": 1100},
 
-        {"recording_sid": "REC-017", "caller": "+15552348765", "called_number": "+15551001099", "school_id": "lincoln-elementary",
+        {"recording_sid": "REC-017", "caller": "+15552348765", "called_number": "+15551001099", "school_id": "springfield-elementary",
          "transcript": "Hi, this is Robert Taylor. My son Jayden has a dentist cleaning at 11 so I'll be picking him up at 10:30. He's in kindergarten with Ms. Rivera.",
          "threat_level": "none", "threat_keywords": [], "category": "attendance", "is_attendance": True,
          "confidence": 0.96, "timestamp": (now - timedelta(days=6, hours=2)).isoformat(), "processing_time_ms": 1700,
