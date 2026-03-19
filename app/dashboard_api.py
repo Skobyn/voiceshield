@@ -83,6 +83,13 @@ def seed_mock_data():
 
     # Voicemail records spanning the last 7 days
     mock_voicemails = [
+        # Today — early morning threat (4:30 AM)
+        {"recording_sid": "REC-000", "caller": "BLOCKED", "called_number": "+15551001001", "school_id": "lincoln-elementary",
+         "transcript": "Listen to me very carefully. I have a gun and I'm bringing it to Lincoln Elementary this morning. By the time the kids get there, it's going to be too late. You people ruined my family and now you're going to pay for it.",
+         "threat_level": "critical", "threat_keywords": ["gun", "bringing it", "too late", "pay for it"], "category": "threat", "is_attendance": False,
+         "confidence": 0.99, "timestamp": now.replace(hour=4, minute=30, second=0, microsecond=0).isoformat(), "processing_time_ms": 1180,
+         "alert_sent": True, "alert_targets": ["admin@lincoln-elementary.edu", "principal@lincoln-elementary.edu", "dispatch@springfield-pd.gov", "+15559110001"]},
+
         # Today
         {"recording_sid": "REC-001", "caller": "+15551234567", "called_number": "+15551001099", "school_id": "lincoln-elementary",
          "transcript": "Hi, this is Maria Garcia calling about my son Diego. He has a fever and won't be coming to school today. He's in Mrs. Patterson's third grade class. Thank you.",

@@ -1,0 +1,6 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/apex-internal-apps/workflow-assistant/voiceshield:$COMMIT_SHA', '-t', 'us-central1-docker.pkg.dev/apex-internal-apps/workflow-assistant/voiceshield:latest', '.']
+images:
+  - 'us-central1-docker.pkg.dev/apex-internal-apps/workflow-assistant/voiceshield:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/apex-internal-apps/workflow-assistant/voiceshield:latest'
